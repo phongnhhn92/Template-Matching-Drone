@@ -5,6 +5,10 @@
 #include <conio.h>
 #include <Windows.h>
 #define RATIO 0.5
+#define TM_METHOD 4
+#define IMAGE_WIDTH 1280
+#define IMAGE_HEIGHT 720
+#define MARGIN 10
 
 using namespace std;
 using namespace cv;
@@ -34,7 +38,7 @@ int main()
 	*/
 	int frameCount = 227;
 	int startFrame = 164;
-	VideoWriter video("EveningB1.wmv", CV_FOURCC('W', 'M', 'V', '2'), 5, Size(1280, 720), true);
+	VideoWriter video("EveningB1.wmv", CV_FOURCC('W', 'M', 'V', '2'), 5, Size(IMAGE_WIDTH, IMAGE_HEIGHT), true);
 	for (int i = startFrame; i <= frameCount; i++)
 	{
 		frameNum = i;
@@ -47,7 +51,7 @@ int main()
 
 		input_image = imread(to_string(frameNum) + ".jpg", CV_LOAD_IMAGE_UNCHANGED);
 		input_image.copyTo(final_result);// for display result in the end
-		resize(input_image, input_image, Size(), RATIO, RATIO, 2); // resize by half for better processing
+		resize(input_image, input_image, Size(), RATIO, RATIO, 1/RATIO); // resize by half for better processing
 		temp_image = imread("template_" + to_string(frameNum) + ".bmp", CV_LOAD_IMAGE_UNCHANGED);
 		int template_x = temp_image.size().width;
 		int template_y = temp_image.size().height;
@@ -61,12 +65,11 @@ int main()
 		else
 		{
 			try	{
-				int margin = 10;
-				ROI_x = matching_x / (1/RATIO) - margin;
-				ROI_y = matching_y / (1 / RATIO) - margin; //input image half size so the height must be divided by 2 for ROI
+				ROI_x = matching_x / (1/RATIO) - MARGIN;
+				ROI_y = matching_y / (1 / RATIO) - MARGIN; //input image half size so the height must be divided by 2 for ROI
 
-				ROI_width = template_x + margin*(1 / RATIO);
-				ROI_height = template_y + margin*(1 / RATIO);
+				ROI_width = template_x + MARGIN*(1 / RATIO);
+				ROI_height = template_y + MARGIN*(1 / RATIO);
 
 
 				Rect myROI(ROI_x, ROI_y, ROI_height, ROI_width);
@@ -88,7 +91,7 @@ int main()
 
 		/// Do the Matching and Normalize
 		//  method = CV_TM_CCOEFF (4)
-		matchTemplate(img_ROI, temp_image, result, 4);
+		matchTemplate(img_ROI, temp_image, result, TM_METHOD);
 		normalize(result, result, 0, 1, NORM_MINMAX, -1, Mat());
 
 		/// Localizing the best match with minMaxLoc
